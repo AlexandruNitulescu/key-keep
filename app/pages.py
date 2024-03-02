@@ -62,10 +62,12 @@ class HomePage(BaseModel):
         
         self.login_btn = Button(self.login_frame, padx=16, pady=4, text="LOGIN", bg=MAIN_COLOR, border=0, fg=TEXT_COLOR,
                                 highlightthickness=0, borderwidth=0, bd=0,highlightbackground=BACKGROUND_COLOR,
-                                borderless=True, command=self.login)
+                                # borderless=True, 
+                                command=self.login)
        
         self.register_btn = Button(self.login_frame, text="Not registered? Signup here!", bg=BACKGROUND_COLOR, fg=TEXT_COLOR, font=('Ubuntu', 9),
-                                   borderless=True, command=self.open_register_page)
+                                #    borderless=True, 
+                                   command=self.open_register_page)
 
         self.username_label.grid(row=0, column=0, padx=8, pady=4, sticky="w")
         self.username_entry.grid(row=1, column=0, padx=8, pady=4, sticky="e")
@@ -145,10 +147,12 @@ class RegisterPage(BaseModel):
         
         self.login_btn = Button(self.register_frame, padx=16, pady=4, text="REGISTER", bg=MAIN_COLOR, border=0, fg=TEXT_COLOR,
                                 highlightthickness=0, borderwidth=0, bd=0,highlightbackground=BACKGROUND_COLOR,
-                                borderless=True, command=self.register)
+                                # borderless=True, 
+                                command=self.register)
        
         self.go_back_btn = Button(self.register_frame, text="Go back!", bg=BACKGROUND_COLOR, fg=TEXT_COLOR, font=('Ubuntu', 16),
-                                   borderless=True, command=self.open_home_page)
+                                #    borderless=True, 
+                                   command=self.open_home_page)
 
         self.username_label.grid(row=0, column=0, padx=8, pady=4, sticky="w")
         self.username_entry.grid(row=1, column=0, padx=8, pady=4, sticky="e")
@@ -261,6 +265,7 @@ class VaultPage(BaseModel):
         key_keepers = self.db.query(KeyKeeper).filter_by(user_id=self.user_id).all()
 
         # Populate the table with key keepers data
+        rows = 0
         for row_idx, key_keeper in enumerate(key_keepers, start=2):
             decrypted_keys = auth.decrypt_data(key_keeper.hashed_name, self.static_key)  # Decrypt using Fernet key
             decrypted_password = auth.decrypt_data(key_keeper.hashed_password, self.static_key)  # Decrypt using Fernet key
@@ -280,12 +285,14 @@ class VaultPage(BaseModel):
 
             delete_button = Button(self.table_frame, text="Delete", command=lambda key=key_keeper.id: self.delete_data(key))
             delete_button.grid(row=row_idx, column=5, padx=5, pady=5)
+            rows +=1
+
 
         add_button = Button(self.table_frame, text="Add Data", command=self.add_data)
-        add_button.grid(row=row_idx+1,column=0)
+        add_button.grid(row=rows+2,column=0)
 
         backup_btn = Button(self.table_frame, text="Backup", command=self.save_encrypted_data_to_csv)
-        backup_btn.grid(row=row_idx+1,column=2)
+        backup_btn.grid(row=rows+2,column=2)
 
     def add_data(self):
         # Create a new window for adding data

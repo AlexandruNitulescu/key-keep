@@ -8,7 +8,7 @@ class App(Tk):
     def __init__(self):
         super().__init__()
         self.title('Key Keep | Save your passwords secretly!')
-        self.geometry('600x360')
+        self.geometry('1200x720')
         self.resizable(0, 0)
         self.configure(background='#0d1b2a')
 

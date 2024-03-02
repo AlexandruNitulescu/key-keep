@@ -1,5 +1,5 @@
-# from tkinter import Frame, Label, Entry, Tk
 from tkinter import *
+from tkinter import messagebox 
 from sqlalchemy import Table, MetaData, Column
 from sqlalchemy.sql import select
 from models import KeyKeeper
@@ -10,7 +10,8 @@ import asyncio
 from tkinter import ttk
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-
+import pyperclip  # For copying to clipboard
+import csv
 
 
 BACKGROUND_COLOR = '#0d1b2a'
@@ -80,12 +81,12 @@ class HomePage(BaseModel):
         password = self.password_entry.get()
 
         db = next(get_db())
-        authenticated_user = auth.authenticate_user(username=username, password=password,db=db)
+        authenticated_user = auth.authenticate_user(username=username, password=password, db=db)
 
         if authenticated_user:
             print("Login successful")
             self.show_success_frame()
-            self.navigate_to_vault(authenticated_user.id, authenticated_user.hashed_password, db=db)
+            self.navigate_to_vault(authenticated_user.id, password=password, db=db)
         else:
             print("Login failed")
             self.show_error_frame()
@@ -94,9 +95,9 @@ class HomePage(BaseModel):
         self.clear_page()
         register_page = RegisterPage(self.screen)
 
-    def navigate_to_vault(self, user_id: int, hashed_password: str,db: Session):
+    def navigate_to_vault(self, user_id: int, password, db: Session):
         self.clear_page()
-        vault_page = VaultPage(self.screen, user_id=user_id, user_password=hashed_password, db=db)
+        vault_page = VaultPage(self.screen, user_id=user_id, user_password=password, db=db)
 
     def show_success_frame(self):
         # Create a success message frame
@@ -173,23 +174,32 @@ class RegisterPage(BaseModel):
         password_repeat = self.password_repeat_entry.get()
 
         db = next(get_db())
-        registration_result = auth.register_user(username, password, password_repeat, db)
 
-        if registration_result is True:
-            self.show_success_frame()
+        success, result = auth.register_user(username, password, password_repeat, db)
+
+        if success:
+            self.show_success_frame(result)
         else:
-            self.show_error_frame(registration_result)
+            self.show_error_frame(result)
 
-    def show_success_frame(self):
-        # Create a success message frame
-        self.open_home_page()
-        success_frame = Frame(self.screen, background="green")
-        success_label = Label(success_frame, text="Registration successful!", fg='#134e4a', bg='#ccfbf1', font=('Lato', 16), padx=16, pady=16,
-                              highlightthickness=1, borderwidth=1, bd=1, highlightcolor='#10b981')
-        success_label.pack()
-        success_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.screen.after(3000, success_frame.destroy)
+    def show_success_frame(self, secret_key):
+        self.success_frame = Frame(self.screen, background=BACKGROUND_COLOR)
+        self.success_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.success_label = Label(self.success_frame, text="Registration successful!", fg='#134e4a', bg='#ccfbf1',
+                              font=('Lato', 16), padx=16, pady=16, highlightthickness=1, borderwidth=1,
+                              bd=1, highlightcolor='#10b981')
+        self.secret_key_label = Label(self.success_frame, text=f"{secret_key}", font=('Lato', 12), padx=16, pady=16)
+        self.copy_button = Button(self.success_frame, text="Copy to Clipboard", command=self.copy_to_clipboard(secret_key))
+        self.close_button = Button(self.success_frame, text="Close", command=self.destroy_and_close)
+
+        self.success_label.grid(row=0, column=0, padx=8, pady=4, sticky="w")
+        self.secret_key_label.grid(row=1, column=0, padx=8, pady=4, sticky="e")
+
+        self.copy_button.grid(row=2, column=0, padx=8, pady=4, sticky="w")
+        self.close_button.grid(row=3, column=0, padx=8, pady=4, sticky="e")
+
 
     def show_error_frame(self, error_message: str):
         error_frame = Frame(self.screen)
@@ -197,126 +207,85 @@ class RegisterPage(BaseModel):
                             highlightthickness=2, borderwidth=2, bd=2, highlightcolor='#ef4444', highlightbackground='#ef4444')
         error_label.pack()
         error_frame.place(relx=0.5, rely=0.5, anchor="center")
-
-        # Schedule the frame to be destroyed after 3 seconds
         self.screen.after(3000, error_frame.destroy)
+    
+    def copy_to_clipboard(self, secret_key):
+        pyperclip.copy(secret_key)
 
-# from tkinter import ttk
-# from sqlalchemy.orm import Session
-# from sqlalchemy import Table, MetaData, Column
-# from sqlalchemy.sql import select
-# from models import KeyKeeper
-# class VaultPage(BaseModel):
-#     def __init__(self, screen: Tk, user_id: int, db: Session):
-#         super().__init__(screen)
-#         self.user_id = user_id
-#         self.db = db
-#         self.create_vault_page()
-#         self.id = 3
-
-#     def create_vault_page(self):
-#         self.tree = ttk.Treeview(self.screen)
-#         self.tree.pack(expand=True, fill="both")
-        
-#         # Generate table data
-#         self.generate_table()
-
-#         # Button to add new data
-#         add_button = Button(self.screen, text="Add Data", command=self.add_data)
-#         add_button.pack()
-
-#     def generate_table(self):
-#         # Define columns for the table
-#         columns = ("ID", "Hashed Keys", "Hashed Password")
-
-#         # Configure existing Treeview widget
-#         self.tree["columns"] = columns
-#         self.tree["show"] = "headings"
-        
-#         # Define column headings
-#         for col in columns:
-#             self.tree.heading(col, text=col)
-
-#         # Retrieve key keepers data from the database
-#         key_keepers = self.db.query(KeyKeeper).all()
-
-#         # Populate the table with key keepers data
-#         for key_keeper in key_keepers:
-#             self.tree.insert("", "end", values=(key_keeper.id, key_keeper.hashed_keys, key_keeper.hashed_password))
-
-#     def add_data(self):
-#         # Create a new window for adding data
-#         add_window = Tk()
-#         add_window.title("Add Data")
-
-#         # Labels and entry fields for input
-#         Label(add_window, text="Hashed Keys:").grid(row=0, column=0)
-#         hashed_keys_entry = Entry(add_window)
-#         hashed_keys_entry.grid(row=0, column=1)
-
-#         Label(add_window, text="Hashed Password:").grid(row=1, column=0)
-#         hashed_password_entry = Entry(add_window)
-#         hashed_password_entry.grid(row=1, column=1)
-
-#         # Button to save data
-#         save_button = Button(add_window, text="Save", command=lambda: self.save_data(hashed_keys_entry.get(), hashed_password_entry.get(), add_window))
-#         save_button.grid(row=2, column=0, columnspan=2)
-
-#     def save_data(self, hashed_keys, hashed_password, add_window):
-#         # Create a new KeyKeeper instance and add it to the database
-#         new_key_keeper = KeyKeeper(hashed_keys=hashed_keys, hashed_password=hashed_password, user_id=self.user_id)
-#         self.db.add(new_key_keeper)
-#         self.db.commit()
-
-#         # Update the table to reflect the changes
-#         self.generate_table()
-
-#         # Close the add data window
-#         add_window.destroy()
-
+    def destroy_and_close(self):
+        self.success_frame.destroy()
+        self.register_frame.destroy()
+        self.clear_page()
+        home_page = HomePage(self.screen)
 
 
 class VaultPage(BaseModel):
     def __init__(self, screen: Tk, user_id: int, user_password: str, db: Session):
         super().__init__(screen)
         self.user_id = user_id
-        self.user_password = user_password
+        self.user_password = user_password  # Encode the password properly
         self.db = db
-        self.key, _ = auth.generate_fernet_key(user_password)  # Generate Fernet key based on user password
+        self.static_key = auth.generate_static_key(user_password)
         self.create_vault_page()
         self.id = 3
+        self.generate_table()  # Generate table upon initialization
+        scrollbar = Scrollbar(screen)
+        scrollbar.pack( side = RIGHT, fill=Y )
+
+    def copy_to_clipboard(self, secret_key):
+        pyperclip.copy(secret_key)
+
 
     def create_vault_page(self):
-        self.tree = ttk.Treeview(self.screen)
-        self.tree.pack(expand=True, fill="both")
-        
-        # Generate table data
-        self.generate_table()
+            # Create a frame to hold the table and buttons
+            self.table_frame = ttk.Frame(self.screen)
+            self.table_frame.pack(expand=True, fill="both")
 
-        # Button to add new data
-        add_button = Button(self.screen, text="Add Data", command=self.add_data)
-        add_button.pack()
+            # Button to add new data
+            add_button = Button(self.table_frame, text="Add Data", command=self.add_data)
+            add_button.pack(side="top", pady=5)  # Use pack here instead of grid
+
 
     def generate_table(self):
-        # Define columns for the table
-        columns = ("ID", "Hashed Keys", "Hashed Password")
+        for widget in self.table_frame.winfo_children():
+            widget.destroy()
 
-        # Configure existing Treeview widget
-        self.tree["columns"] = columns
-        self.tree["show"] = "headings"
-        
+        # Define columns for the table
+        columns = ("ID", "Name", "Password", "Actions")
+
         # Define column headings
-        for col in columns:
-            self.tree.heading(col, text=col)
+        for col_idx, col_name in enumerate(columns):
+            Label(self.table_frame, text=col_name).grid(row=1, column=col_idx, padx=5, pady=5)
 
         # Retrieve key keepers data from the database
         key_keepers = self.db.query(KeyKeeper).filter_by(user_id=self.user_id).all()
 
         # Populate the table with key keepers data
-        for key_keeper in key_keepers:
-            decrypted_keys = auth.decrypt_data(key_keeper.hashed_keys, self.key)  # Decrypt using Fernet key
-            decrypted_password = auth.decrypt_data(key_keeper.hashed_password, self.key)  # Decrypt using Fernet key
-            self.tree.insert("", "end", values=(key_keeper.id, decrypted_keys, decrypted_password))
+        for row_idx, key_keeper in enumerate(key_keepers, start=2):
+            decrypted_keys = auth.decrypt_data(key_keeper.hashed_name, self.static_key)  # Decrypt using Fernet key
+            decrypted_password = auth.decrypt_data(key_keeper.hashed_password, self.static_key)  # Decrypt using Fernet key
+            
+            Label(self.table_frame, text=key_keeper.id,
+                font=('Lato', 11)).grid(row=row_idx, column=0, padx=2, pady=2)
+            Label(self.table_frame, text=decrypted_keys,
+                  font=('Lato', 11)).grid(row=row_idx, column=1, padx=2, pady=2)
+            Label(self.table_frame, text=decrypted_password,
+                  font=('Lato', 11)).grid(row=row_idx, column=2, padx=2, pady=2)
+
+            copy_button = Button(self.table_frame, text="Copy", command=self.copy_to_clipboard(decrypted_password))
+            copy_button.grid(row=row_idx, column=3, padx=1, pady=1)
+            # Create buttons for actions (edit and delete)
+            edit_button = Button(self.table_frame, text="Edit", command=lambda key=key_keeper.id: self.edit_data(key))
+            edit_button.grid(row=row_idx, column=4, padx=5, pady=5)
+
+            delete_button = Button(self.table_frame, text="Delete", command=lambda key=key_keeper.id: self.delete_data(key))
+            delete_button.grid(row=row_idx, column=5, padx=5, pady=5)
+
+        add_button = Button(self.table_frame, text="Add Data", command=self.add_data)
+        add_button.grid(row=row_idx+1,column=0)
+
+        backup_btn = Button(self.table_frame, text="Backup", command=self.save_encrypted_data_to_csv)
+        backup_btn.grid(row=row_idx+1,column=2)
 
     def add_data(self):
         # Create a new window for adding data
@@ -324,35 +293,104 @@ class VaultPage(BaseModel):
         add_window.title("Add Data")
 
         # Labels and entry fields for input
-        Label(add_window, text="Hashed Keys:").grid(row=0, column=0)
-        hashed_keys_entry = Entry(add_window)
-        hashed_keys_entry.grid(row=0, column=1)
+        Label(add_window, text="Name:").grid(row=0, column=0)
+        name_entry = Entry(add_window)
+        name_entry.grid(row=0, column=1)
 
-        Label(add_window, text="Hashed Password:").grid(row=1, column=0)
-        hashed_password_entry = Entry(add_window)
-        hashed_password_entry.grid(row=1, column=1)
+        Label(add_window, text="Password:").grid(row=1, column=0)
+        password_entry = Entry(add_window)
+        password_entry.grid(row=1, column=1)
 
         # Button to save data
-        save_button = Button(add_window, text="Save", command=lambda: self.save_data(hashed_keys_entry.get(), hashed_password_entry.get(), add_window))
+        save_button = Button(add_window, text="Save", command=lambda: self.save_data(name_entry.get(), password_entry.get(), add_window))
         save_button.grid(row=2, column=0, columnspan=2)
 
-    def save_data(self, hashed_keys, hashed_password, add_window):
-        # Encrypt the data using the Fernet key
-        encrypted_keys = auth.encrypt_data(hashed_keys, self.key)
-        encrypted_password = auth.encrypt_data(hashed_password, self.key)
+    def save_data(self, form_name, form_password, add_window):
+        # Encrypt the data using the user's password
+        encrypted_name = auth.encrypt_data(form_name, self.static_key)
+        encrypted_password = auth.encrypt_data(form_password, self.static_key)
 
         # Create a new KeyKeeper instance and add it to the database
-        new_key_keeper = KeyKeeper(hashed_keys=encrypted_keys, hashed_password=encrypted_password, user_id=self.user_id)
+        new_key_keeper = KeyKeeper(hashed_name=encrypted_name, hashed_password=encrypted_password, user_id=self.user_id)
         self.db.add(new_key_keeper)
         self.db.commit()
-
-        # Update the table to reflect the changes
-        self.generate_table()
 
         # Close the add data window
         add_window.destroy()
 
+        # Update the table to reflect the changes
+        self.generate_table()
 
 
+    def edit_data(self, key_keeper_id):
+        # Retrieve the key keeper object from the database
+        key_keeper = self.db.query(KeyKeeper).filter_by(id=key_keeper_id).first()
+        
+        # Create a new window for editing data
+        edit_window = Tk()
+        edit_window.title("Edit Data")
+
+        # Labels and entry fields for input
+        Label(edit_window, text="New Name:").grid(row=0, column=0)
+        name_entry = Entry(edit_window)
+        name_entry.grid(row=0, column=1)
+        name_entry.insert(0, auth.decrypt_data(key_keeper.hashed_name, self.static_key))  # Prefill with existing name
+        
+        Label(edit_window, text="New Password:").grid(row=1, column=0)
+        password_entry = Entry(edit_window)
+        password_entry.grid(row=1, column=1)
+        password_entry.insert(0, auth.decrypt_data(key_keeper.hashed_password, self.static_key))  # Prefill with existing password
+
+        # Button to save edited data
+        save_button = Button(edit_window, text="Save", command=lambda: self.save_edited_data(key_keeper, name_entry.get(), password_entry.get(), edit_window))
+        save_button.grid(row=2, column=0, columnspan=2)
+
+    def delete_data(self, key_keeper_id):
+        # Retrieve the key keeper object from the database
+        key_keeper = self.db.query(KeyKeeper).filter_by(id=key_keeper_id).first()
+        
+        # Confirm deletion with a message box
+        confirmation = messagebox.askyesno("Confirmation", "Are you sure you want to delete this entry?")
+        if confirmation:
+            # Delete the key keeper object from the database
+            self.db.delete(key_keeper)
+            self.db.commit()
+            # Update the table to reflect the changes
+            self.generate_table()
+
+    def save_edited_data(self, key_keeper, new_name, new_password, edit_window):
+        # Encrypt the edited data using the user's password
+        encrypted_name = auth.encrypt_data(new_name, self.static_key)
+        encrypted_password = auth.encrypt_data(new_password, self.static_key)
+
+        # Update the key keeper object with edited data
+        key_keeper.hashed_name = encrypted_name
+        key_keeper.hashed_password = encrypted_password
+        
+        # Commit changes to the database
+        self.db.commit()
+
+        # Close the edit window
+        edit_window.destroy()
+
+        # Update the table to reflect the changes
+        self.generate_table()
+
+    def save_encrypted_data_to_csv(self):
+            # Retrieve key keepers data from the database
+            key_keepers = self.db.query(KeyKeeper).filter_by(user_id=self.user_id).all()
+
+            # Open a CSV file in write mode
+            with open("encrypted_data.csv", "w", newline="") as csvfile:
+                writer = csv.writer(csvfile)
+
+                # Write header row
+                writer.writerow(["ID", "Encrypted Name", "Encrypted Password"])
+
+                # Write encrypted data rows
+                for key_keeper in key_keepers:
+                    writer.writerow([key_keeper.id, key_keeper.hashed_name, key_keeper.hashed_password])
+
+            messagebox.showinfo("Backup", "Encrypted data has been saved to encrypted_data.csv")
 
 

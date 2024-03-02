@@ -3,7 +3,7 @@ from tkinter import messagebox
 from sqlalchemy import Table, MetaData, Column
 from sqlalchemy.sql import select
 from models import KeyKeeper
-from tkmacosx import Button
+#from tkmacosx import Button
 import authentication as auth
 from db import get_db
 import asyncio

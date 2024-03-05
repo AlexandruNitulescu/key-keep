@@ -12,16 +12,22 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 import pyperclip  # For copying to clipboard
 import csv
+from customtkinter import *
+
+BACKGROUND_COLOR = '#09090b'
+FRAME_COLOR = '#18181b'
+ENTRY_COLOR = '#3f3f46'
+LIGHTER_COLOR = '#27272a'
 
 
-BACKGROUND_COLOR = '#0d1b2a'
 SECONDARY_COLOR = '#1b263b'
 THIRD_COLOR = '#415a77'
 FOURTH_COLOR = '#778da9'
-TEXT_COLOR = '#e0e1dd'
+TEXT_COLOR = '#f4f4f5'
 MAIN_COLOR = '#3a86ff'
-
-
+BASE_COLOR = '#1d4ed8'
+DARK_COLOR = '#121212'
+HOVER_COLOR = '#1e3a8a'
 FAIL_COLOR = '#fee2e2'
 
 class BaseModel(Frame):
@@ -47,36 +53,54 @@ class HomePage(BaseModel):
         self.id = 1
 
     def create_login_form(self):
-        self.login_frame = Frame(self.screen, background=BACKGROUND_COLOR)
+        self.login_frame = Frame(self.screen, background=FRAME_COLOR, padx=32, pady=64,)
         self.login_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.username_label = Label(self.login_frame, text="USERNAME", fg=TEXT_COLOR, font=('Lato', 16, 'bold'), background=BACKGROUND_COLOR)
-        self.username_entry = Entry(self.login_frame, background=THIRD_COLOR, selectbackground=MAIN_COLOR,
-                                    highlightthickness=0, borderwidth=0, bd=0,
-                                    width=30, fg=TEXT_COLOR, font=('Lato', 16), relief='flat')
-
-        self.password_label = Label(self.login_frame, text="PASSWORD", fg=TEXT_COLOR, font=('Lato', 16, 'bold'), background=BACKGROUND_COLOR)
-        self.password_entry = Entry(self.login_frame, background=THIRD_COLOR, selectbackground=MAIN_COLOR,
-                                    highlightthickness=0, borderwidth=0, bd=0,
-                                    width=30, fg=TEXT_COLOR, font=('Lato', 16), relief='flat', show='*')
+        self.username_label = Label(self.login_frame, text="Username", background=FRAME_COLOR, fg=TEXT_COLOR, font=('yu gothic ui', 12, 'bold'), )
+        # self.username_entry = Entry(self.login_frame, background=BASE_COLOR, selectbackground=MAIN_COLOR,
+        #                             highlightthickness=0, borderwidth=0, bd=0,
+        #                             width=30, fg=TEXT_COLOR, font=('Lato', 16), relief='flat')
+        # self.username_entry = Entry(self.login_frame, background='#f3f4f6', selectbackground=MAIN_COLOR,
+        #                             highlightthickness=0, borderwidth=0, bd=0,
+        #                             width=40, fg='#334155', relief='flat',
+        #                             font=('yu gothic ui', 14))
         
-        self.login_btn = Button(self.login_frame, padx=16, pady=4, text="LOGIN", bg=MAIN_COLOR, border=0, fg=TEXT_COLOR,
-                                highlightthickness=0, borderwidth=0, bd=0,highlightbackground=BACKGROUND_COLOR,
-                                # borderless=True, 
-                                command=self.login)
-       
-        self.register_btn = Button(self.login_frame, text="Not registered? Signup here!", bg=BACKGROUND_COLOR, fg=TEXT_COLOR, font=('Ubuntu', 9),
-                                #    borderless=True, 
-                                   command=self.open_register_page)
+        self.username_entry = CTkEntry(self.login_frame, border_width=0, width=340, height=40, corner_radius=2,
+                            font=('yu gothic ui', 14), fg_color=ENTRY_COLOR)
 
-        self.username_label.grid(row=0, column=0, padx=8, pady=4, sticky="w")
-        self.username_entry.grid(row=1, column=0, padx=8, pady=4, sticky="e")
 
-        self.password_label.grid(row=2, column=0, padx=8, pady=4, sticky="w")
-        self.password_entry.grid(row=3, column=0, padx=8, pady=4, sticky="e")
+        self.password_label= Label(self.login_frame, text="Password", fg=TEXT_COLOR, font=('yu gothic ui', 12, 'bold'), background=FRAME_COLOR)
+        # self.password_entry = Entry(self.login_frame, background='#f3f4f6', selectbackground=MAIN_COLOR,
+        #                             highlightthickness=0, borderwidth=0, bd=0,
+        #                             fg='#334155', font=('yu gothic ui', 14), relief='flat', show='*')
+        self.password_entry = CTkEntry(self.login_frame, border_width=0, width=340, height=40, corner_radius=2,
+                                    font=('yu gothic ui', 14), show='*', fg_color=ENTRY_COLOR)
+        
+        # self.login_btn = Button(self.login_frame, text="LOGIN", bg=MAIN_COLOR, border=0, fg=TEXT_COLOR,
+        #                         highlightthickness=0, borderwidth=0, bd=0,highlightbackground=BACKGROUND_COLOR,
+        #                         # borderless=True, 
+        #                         width=40,
+        #                         command=self.login)
+        self.login_btn = CTkButton(master=self.login_frame, text='Sign In', font=('yu gothic ui', 16, 'bold'), fg_color='#1d4ed8', hover_color= HOVER_COLOR, corner_radius=32,
+                                    width=340, height=48,
+                                    command=self.login)
+        
+        self.register_btn = CTkButton(master=self.login_frame, text='Register Now', font=('yu gothic ui', 16, 'bold'), fg_color=FRAME_COLOR, hover_color=FRAME_COLOR, border_color=ENTRY_COLOR, border_width=2, corner_radius=32,
+                                    width=340, height=48,
+                                    command=self.open_register_page)
+        
+        # self.register_btn = Button(self.login_frame, text="Not registered? Signup here!", bg=BACKGROUND_COLOR, fg=TEXT_COLOR, font=('Ubuntu', 9),
+        #                         #    borderless=True, 
+        #                            command=self.open_register_page)
 
-        self.login_btn.grid(row=4, column=0, padx=8, pady=4, sticky="w")
-        self.register_btn.grid(row=5, column=0, padx=8, pady=4, sticky="w")
+        self.username_label.grid(row=0, column=0, padx=0, pady=0, sticky="w")
+        self.username_entry.grid(row=1, column=0, padx=0, pady=8, sticky="w")
+
+        self.password_label.grid(row=2, column=0, padx=0, pady=0, sticky="w")
+        self.password_entry.grid(row=3, column=0, padx=0, pady=8, sticky="w")
+
+        self.login_btn.grid(row=4, column=0, padx=0, pady=32, sticky="w")
+        self.register_btn.grid(row=5, column=0, padx=0, pady=0, sticky="w")
 
     def login(self):
         username = self.username_entry.get()
@@ -128,10 +152,10 @@ class RegisterPage(BaseModel):
         self.id = 2
 
     def create_register_form(self):
-        self.register_frame = Frame(self.screen, background=BACKGROUND_COLOR)
+        self.register_frame = Frame(self.screen, background=FRAME_COLOR, padx=32, pady=64)
         self.register_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.username_label = Label(self.register_frame, text="USERNAME", fg=TEXT_COLOR, font=('Lato', 16, 'bold'), background=BACKGROUND_COLOR)
+        self.username_label = Label(self.register_frame, text="Username", background=FRAME_COLOR, fg=TEXT_COLOR, font=('yu gothic ui', 12, 'bold'), )
         self.username_entry = Entry(self.register_frame, background=THIRD_COLOR, selectbackground=MAIN_COLOR,
                                     highlightthickness=0, borderwidth=0, bd=0,
                                     width=30, fg=TEXT_COLOR, font=('Lato', 16), relief='flat')

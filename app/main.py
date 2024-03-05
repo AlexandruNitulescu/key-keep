@@ -10,7 +10,7 @@ class App(Tk):
         self.title('Key Keep | Save your passwords secretly!')
         self.geometry('1200x720')
         self.resizable(0, 0)
-        self.configure(background='#0d1b2a')
+        self.configure(background='#09090b')
 
     #     self.frames = {}  # Dictionary to hold instances of all frames
 

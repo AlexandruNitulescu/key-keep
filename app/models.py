@@ -19,6 +19,7 @@ class KeyKeeper(Base):
     __tablename__ = 'key_keepers'
 
     id = Column(Integer, primary_key=True, index=True)
+    hashed_place = Column(String)
     hashed_name = Column(String)
     hashed_password = Column(String)
 

@@ -1,6 +1,8 @@
 from tkinter import Tk
 from pages import HomePage, RegisterPage
-from db import engine
+from views.VaultPage import VaultPage
+
+from db import engine, get_db
 from models import Base
 
 
@@ -32,4 +34,7 @@ if __name__ == "__main__":
     app = App()
     Base.metadata.create_all(bind=engine)
     home_page = HomePage(app)
+    db = next(get_db())
+
+    # VaultPage(app, 0, 'alexandru', db=db)
     app.mainloop()

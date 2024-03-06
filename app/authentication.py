@@ -123,16 +123,12 @@ def generate_static_key(specific_string: str) -> bytes:
     return key
 
 def encrypt_data(data, key):
-    # Generate Fernet cipher suite using the key
     cipher_suite = Fernet(key)
-    # Encrypt the datas
     encrypted_data = cipher_suite.encrypt(data.encode())
     return encrypted_data
 
 def decrypt_data(encrypted_data, key):
-    # Generate Fernet cipher suite using the key
     cipher_suite = Fernet(key)
-    # Decrypt the data
     decrypted_data = cipher_suite.decrypt(encrypted_data).decode()
     return decrypted_data
 
